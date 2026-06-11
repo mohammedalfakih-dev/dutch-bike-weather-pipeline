@@ -1,38 +1,53 @@
-"""Example tests for Pydantic models. Replace with your own."""
+"""Tests for the WeatherReading Pydantic model."""
 
 import pytest
 from pydantic import ValidationError
+
 from src.models import WeatherReading
 
 
-def test_valid_reading():
-    """A valid record should be accepted."""
-    reading = WeatherReading(
-        city="Copenhagen",
-        temperature=18.5,
-        humidity=65.0,
-        timestamp="2026-03-30T10:00",
-    )
-    assert reading.city == "Copenhagen"
-    assert reading.temperature == 18.5
+def valid_record() -> dict[str, object]:
+    """Return one valid Open-Meteo weather record."""
+    return {
+        "city": "Amsterdam",
+        "forecast_time": "2026-06-10T12:00",
+        "temperature_2m": 18.5,
+        "precipitation": 0.2,
+        "wind_speed_10m": 12.0,
+        "weather_code": 3,
+    }
 
 
-def test_invalid_temperature_too_high():
-    """Temperature above 100 should be rejected."""
+def test_weather_reading_accepts_valid_data() -> None:
+    """A complete valid record should be accepted."""
+    reading = WeatherReading.model_validate(valid_record())
+
+    assert reading.city == "Amsterdam"
+    assert reading.temperature_2m == 18.5
+
+
+def test_weather_reading_rejects_negative_precipitation() -> None:
+    """Precipitation cannot be negative."""
+    data = valid_record()
+    data["precipitation"] = -1.0
+
     with pytest.raises(ValidationError):
-        WeatherReading(
-            city="Copenhagen",
-            temperature=999,
-            humidity=65.0,
-            timestamp="2026-03-30T10:00",
-        )
+        WeatherReading.model_validate(data)
 
 
-def test_missing_city():
-    """Missing required field should be rejected."""
+def test_weather_reading_rejects_empty_city() -> None:
+    """City cannot be empty."""
+    data = valid_record()
+    data["city"] = ""
+
     with pytest.raises(ValidationError):
-        WeatherReading(
-            temperature=18.5,
-            humidity=65.0,
-            timestamp="2026-03-30T10:00",
-        )
+        WeatherReading.model_validate(data)
+
+
+def test_weather_reading_rejects_invalid_timestamp() -> None:
+    """Forecast time must be a valid ISO timestamp."""
+    data = valid_record()
+    data["forecast_time"] = "not-a-date"
+
+    with pytest.raises(ValidationError):
+        WeatherReading.model_validate(data)
