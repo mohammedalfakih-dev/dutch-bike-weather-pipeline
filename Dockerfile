@@ -9,4 +9,6 @@ RUN uv sync --frozen --no-dev
 
 COPY src/ src/
 
-CMD ["uv", "run", "python", "-m", "src.pipeline"]
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["python", "-m", "src.pipeline"]
