@@ -132,14 +132,12 @@ sudo apt-get install -y postgresql-client
 **Windows**
 Download and run the installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/). The installer includes `psql`.
 
-After installing
-
-````
-verify with:
+After installing, open a new terminal and verify with:
 
 ```bash
 psql --version
-````
+
+```
 
 ## Verify results
 
