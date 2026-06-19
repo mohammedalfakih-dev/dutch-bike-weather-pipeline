@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from src.models import WeatherReading
 from src.storage import insert_readings, upload_raw_json
 
-load_dotenv()  # Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
@@ -90,21 +90,16 @@ def fetch_data() -> list[dict[str, Any]]:
 
 
 def validate(raw_records: list[dict[str, Any]]) -> list[WeatherReading]:
-    """Validate raw API records using Pydantic models."""
+    """Validate raw API records using Pydantic models; log and skip invalid ones."""
     valid = []
-    errors = []
 
     for record in raw_records:
         try:
             valid.append(WeatherReading.model_validate(record))
         except ValidationError as error:
-            errors.append(str(error))
+            log.warning("Skipping invalid record: %s", error)
 
     log.info("Validated %d / %d records", len(valid), len(raw_records))
-
-    if errors:
-        raise ValueError(f"Validation failed for {len(errors)} records: {errors[:3]}")
-
     return valid
 
 
